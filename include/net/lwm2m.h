@@ -112,6 +112,7 @@ typedef void (*lwm2m_observe_cb_t)(enum lwm2m_observe_event event, struct lwm2m_
 struct lwm2m_ctx {
 	/** Destination address storage */
 	struct sockaddr remote_addr;
+	socklen_t addr_len;
 
 	/** Private CoAP and networking structures */
 	struct coap_pending pendings[CONFIG_LWM2M_ENGINE_MAX_PENDING];

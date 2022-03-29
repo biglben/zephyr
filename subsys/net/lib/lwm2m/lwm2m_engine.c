@@ -5663,7 +5663,7 @@ int lwm2m_socket_start(struct lwm2m_ctx *client_ctx)
 #endif /* CONFIG_LWM2M_DTLS_SUPPORT */
 
 	if (connect(client_ctx->sock_fd, &client_ctx->remote_addr,
-		    NET_SOCKADDR_MAX_SIZE) < 0) {
+	            client_ctx->addr_len) < 0) {
 		LOG_ERR("Cannot connect UDP (-%d)", errno);
 		lwm2m_engine_context_close(client_ctx);
 		return -errno;
@@ -5748,11 +5748,13 @@ int lwm2m_parse_peerinfo(char *url, struct lwm2m_ctx *client_ctx, bool is_firmwa
 	client_ctx->remote_addr.sa_family = AF_INET6;
 	ret = net_addr_pton(AF_INET6, url + off,
 			    &((struct sockaddr_in6 *)&client_ctx->remote_addr)->sin6_addr);
+	client_ctx->addr_len = sizeof(struct sockaddr_in6);
 	/* Try to parse again using AF_INET */
 	if (ret < 0) {
 		client_ctx->remote_addr.sa_family = AF_INET;
 		ret = net_addr_pton(AF_INET, url + off,
 				    &((struct sockaddr_in *)&client_ctx->remote_addr)->sin_addr);
+		client_ctx->addr_len = sizeof(struct sockaddr_in);
 	}
 
 	if (ret < 0) {
@@ -5777,6 +5779,7 @@ int lwm2m_parse_peerinfo(char *url, struct lwm2m_ctx *client_ctx, bool is_firmwa
 
 		memcpy(&client_ctx->remote_addr, res->ai_addr, sizeof(client_ctx->remote_addr));
 		client_ctx->remote_addr.sa_family = res->ai_family;
+		client_ctx->addr_len = res->ai_addrlen;
 		freeaddrinfo(res);
 #else
 		goto cleanup;
