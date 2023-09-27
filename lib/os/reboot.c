@@ -12,9 +12,19 @@
 
 extern void sys_arch_reboot(int type);
 
+/**
+ * Dummy function which can be overwritten to do something before reboot
+ */
+void __weak sys_pre_reboot(int type)
+{
+	ARG_UNUSED(type);
+}
+
 FUNC_NORETURN void sys_reboot(int type)
 {
 	(void)irq_lock();
+
+	sys_pre_reboot(type);
 
 	/* Disable caches to ensure all data is flushed */
 #if defined(CONFIG_ARCH_CACHE)
