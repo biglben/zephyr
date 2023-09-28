@@ -156,8 +156,11 @@ int dsa_tx(const struct device *dev, struct net_pkt *pkt)
 		 */
 		ctx = net_if_l2_data(iface);
 		context = ctx->dsa_ctx;
-		return ctx->dsa_send(dev,
-				     context->dapi->dsa_xmit_pkt(iface, pkt));
+		struct net_pkt *tagged_pkt = context->dapi->dsa_xmit_pkt(iface, pkt);
+		if (tagged_pkt == NULL) {
+			return -ENOMEM;
+		}
+		return ctx->dsa_send(dev, tagged_pkt);
 	}
 
 	context = dev->data;
@@ -179,8 +182,12 @@ int dsa_tx(const struct device *dev, struct net_pkt *pkt)
 
 	/* Adjust packet for DSA routing and send it via master interface */
 	ctx = net_if_l2_data(iface_master);
-	return ctx->dsa_send(net_if_get_device(iface_master),
-			     context->dapi->dsa_xmit_pkt(iface, pkt));
+
+	struct net_pkt *tagged_pkt = context->dapi->dsa_xmit_pkt(iface, pkt);
+	if (tagged_pkt == NULL) {
+		return -ENOMEM;
+	}
+	return ctx->dsa_send(net_if_get_device(iface_master), tagged_pkt);
 }
 
 struct net_if *dsa_get_slave_port(struct net_if *iface, int slave_num)
