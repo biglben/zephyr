@@ -610,10 +610,17 @@ static inline uint16_t pkt_calc_chksum(struct net_pkt *pkt, uint16_t sum)
 
 	while (cur->buf) {
 		sum = calc_chksum(sum, cur->pos, len);
-
 		cur->buf = cur->buf->frags;
-		if (!cur->buf || !cur->buf->len) {
+		if (!cur->buf) {
 			break;
+		}
+
+		// Skip fragments with no data
+		while (cur->buf->len == 0) {
+			cur->buf = cur->buf->frags;
+			if (!cur->buf) {
+				break;
+			}
 		}
 
 		cur->pos = cur->buf->data;
