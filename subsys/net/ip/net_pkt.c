@@ -1013,7 +1013,8 @@ static size_t pkt_estimate_headers_length(struct net_pkt *pkt,
 
 	/* + protocol header */
 	if (IS_ENABLED(CONFIG_NET_TCP) && proto == IPPROTO_TCP) {
-		hdr_len += NET_TCPH_LEN + NET_TCP_MAX_OPT_SIZE;
+		// tcp already takes his headers into consideration when requesting to allocate
+		// memory, so this is not needed: hdr_len += NET_TCPH_LEN + NET_TCP_MAX_OPT_SIZE;
 	} else if (IS_ENABLED(CONFIG_NET_UDP) && proto == IPPROTO_UDP) {
 		hdr_len += NET_UDPH_LEN;
 	} else if (proto == IPPROTO_ICMP || proto == IPPROTO_ICMPV6) {
