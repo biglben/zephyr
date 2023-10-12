@@ -68,6 +68,7 @@ struct lan865x_data {
 	uint8_t mac_address[6];
 	bool iface_initialized;
 	bool reset;
+	uint32_t irqs;
 
 	K_KERNEL_STACK_MEMBER(thread_stack, CONFIG_ETH_LAN865X_IRQ_THREAD_STACK_SIZE);
 	struct k_thread thread;

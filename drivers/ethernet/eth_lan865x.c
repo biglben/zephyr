@@ -37,6 +37,7 @@ static void lan865x_iface_init(struct net_if *iface)
 {
 	const struct device *dev = net_if_get_device(iface);
 	struct lan865x_data *ctx = dev->data;
+	ctx->irqs = 0;
 
 	net_if_set_link_addr(iface, ctx->mac_address, sizeof(ctx->mac_address),
 			     NET_LINK_ETHERNET);
@@ -340,6 +341,7 @@ static void lan865x_int_callback(const struct device *dev,
 		CONTAINER_OF(cb, struct lan865x_data, gpio_int_callback);
 
 	k_sem_give(&ctx->int_sem);
+	ctx->irqs++;
 }
 
 static void lan865x_read_chunks(const struct device *dev)
@@ -561,3 +563,84 @@ static const struct ethernet_api lan865x_api_func = {
 				      &lan865x_api_func, NET_ETH_MTU);
 
 DT_INST_FOREACH_STATUS_OKAY(LAN865X_DEFINE);
+
+#include <zephyr/shell/shell.h>
+#include <zephyr/net/net_if.h>
+
+static int cmd_get_statistics(const struct shell *shell, size_t argc, char **argv)
+{
+	int index = 1;
+	if (argc > 1) {
+		index = argv[1][0] - 0x30;
+	}
+	struct net_if *iface = net_if_get_by_index(index);
+	if (iface == NULL) {
+		return -EINVAL;
+	}
+	const struct device *dev = net_if_get_device(iface);
+	if (dev == NULL) {
+		return -EINVAL;
+	}
+	struct lan865x_data *ctx = (struct lan865x_data *)dev->data;
+
+	uint32_t stats[13];
+	memset(stats, 0xaa, sizeof(stats));
+	int ret = 0;
+	for (uint8_t st = 0; st < 13; st++) {
+		ret = oa_tc6_reg_read(ctx->tc6, MMS_REG(1, 0x0208 + st), &stats[st]);
+		if (ret < 0) {
+			shell_error(shell, "can not read stats %u, (%x)", st, 0x0208 + st);
+			return -EIO;
+		}
+		// LOG_INF("st %u = 0x%08x", st, stats[st]);
+	}
+	shell_print(shell, "IRQs: %u", ctx->irqs);
+	// print all
+	shell_print(shell, "RxSymbolErr: %u", (stats[0] >> 24) & 0xff);
+	shell_print(shell, "LengthFieldErr: %u", (stats[0] >> 16) & 0xff);
+	shell_print(shell, "OversizeRx: %u", (stats[0] >> 8) & 0xff);
+	shell_print(shell, "UndersizeRx: %u", (stats[0]) & 0xff);
+
+	shell_print(shell, "RxResourceErr: %u", (stats[1] >> 24) & 0xff);
+	shell_print(shell, "RxBufferOverruns: %u", (stats[1] >> 16) & 0xff);
+	shell_print(shell, "RxFifoOverruns: %u", (stats[1] >> 8) & 0xff);
+
+	shell_print(shell, "FrameCheckSeqErr: %u", (stats[2]) & 0xff);
+
+	shell_print(shell, "TypeId4 Match Cnt: %u", (stats[3] >> 24) & 0xff);
+	shell_print(shell, "TypeId3 Match Cnt: %u", (stats[3] >> 16) & 0xff);
+	shell_print(shell, "TypeId2 Match Cnt: %u", (stats[3] >> 8) & 0xff);
+	shell_print(shell, "TypeId1 Match Cnt: %u", (stats[3]) & 0xff);
+
+	shell_print(shell, "SpecAdd4 Match Cnt: %u", (stats[4] >> 24) & 0xff);
+	shell_print(shell, "SpecAdd3 Match Cnt: %u", (stats[4] >> 16) & 0xff);
+	shell_print(shell, "SpecAdd2 Match Cnt: %u", (stats[4] >> 8) & 0xff);
+	shell_print(shell, "SpecAdd1 Match Cnt: %u", (stats[4]) & 0xff);
+
+	shell_print(shell, "UnicastHashMatchFramesRxWoErr: %u", (stats[5] >> 24) & 0xff);
+	shell_print(shell, "MulticastHashMatchFramesRxWoErr: %u", (stats[5] >> 16) & 0xff);
+	shell_print(shell, "BroadcastFramesRxWoErr: %u", (stats[5] >> 8) & 0xff);
+	shell_print(shell, "VlanFramesRxWoErr: %u", (stats[5]) & 0xff);
+
+	shell_print(shell, "Rx Total (with Err): %u", (stats[6]));
+	shell_print(shell, "Rx Total (without Err): %u", (stats[7]));
+	shell_print(shell, "TxAbortInErr: %u", (stats[8]) & 0xff);
+
+	shell_print(shell, "TxAbortExtErr: %u", (stats[9] >> 24) & 0xff);
+	shell_print(shell, "TxFifoUnderruns: %u", (stats[9] >> 16) & 0xff);
+	shell_print(shell, "TxBufferUnderruns: %u", (stats[9] >> 8) & 0xff);
+
+	shell_print(shell, "Excessive Collisions: %u", (stats[10]) & 0xff);
+
+	shell_print(shell, "Tx Total (with Err): %u", (stats[11]));
+	shell_print(shell, "Tx Total (without Err): %u", (stats[12]));
+
+	shell_print(shell, "done");
+	return 0;
+}
+
+SHELL_STATIC_SUBCMD_SET_CREATE(spe_subcmds,
+			       SHELL_CMD(stats, NULL, "Get Spe statistics", cmd_get_statistics),
+			       SHELL_SUBCMD_SET_END);
+
+SHELL_CMD_REGISTER(spe, &spe_subcmds, "SinglePairEthernet Commands", NULL);
