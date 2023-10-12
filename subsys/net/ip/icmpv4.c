@@ -439,6 +439,15 @@ static int icmpv4_handle_echo_request(struct net_icmp_ctx *ctx,
 		/* No identifier or sequence number present */
 		goto drop;
 	}
+	NET_PKT_DATA_ACCESS_CONTIGUOUS_DEFINE(icmpv4_access, struct net_icmpv4_echo_req);
+
+	struct net_icmpv4_echo_req *echo_req =
+		(struct net_icmpv4_echo_req *)net_pkt_get_data(pkt, &icmpv4_access);
+	if (echo_req) {
+		LOG_INF("echo seq %u", ntohs( echo_req->sequence));
+	} else {
+		LOG_INF("Could not get echo seq");
+	}
 
 	reply = net_pkt_alloc_with_buffer(net_pkt_iface(pkt),
 					  net_pkt_ipv4_opts_len(pkt) +
