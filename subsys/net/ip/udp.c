@@ -158,7 +158,10 @@ struct net_udp_hdr *net_udp_input(struct net_pkt *pkt,
 	if (ntohs(udp_hdr->len) != (net_pkt_get_len(pkt) -
 				    net_pkt_ip_hdr_len(pkt) -
 				    net_pkt_ip_opts_len(pkt))) {
-		NET_DBG("DROP: Invalid hdr length");
+		NET_DBG("DROP: Invalid hdr length udp: %d, should %u (%u-%u-%u)",
+			ntohs(udp_hdr->len),
+			(net_pkt_get_len(pkt) - net_pkt_ip_hdr_len(pkt) - net_pkt_ip_opts_len(pkt)),
+			net_pkt_get_len(pkt), net_pkt_ip_hdr_len(pkt), net_pkt_ip_opts_len(pkt));
 		goto drop;
 	}
 

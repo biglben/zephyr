@@ -374,6 +374,7 @@ static void net_rx(struct net_if *iface, struct net_pkt *pkt)
 	pkt_len = net_pkt_get_len(pkt);
 
 	NET_DBG("Received pkt %p len %zu", pkt, pkt_len);
+	net_pkt_hexdump(pkt, "Rx Pkt:");
 
 	net_stats_update_bytes_recv(iface, pkt_len);
 

@@ -250,7 +250,7 @@ enum net_verdict net_ipv4_input(struct net_pkt *pkt)
 
 	hdr_len = (hdr->vhl & NET_IPV4_IHL_MASK) * 4U;
 	if (hdr_len < sizeof(struct net_ipv4_hdr)) {
-		NET_DBG("DROP: Invalid hdr length");
+		NET_DBG("DROP: Invalid hdr length (%d)", hdr_len);
 		goto drop;
 	}
 
@@ -345,9 +345,8 @@ enum net_verdict net_ipv4_input(struct net_pkt *pkt)
 		}
 	}
 
-	NET_DBG("IPv4 packet received from %s to %s",
-		net_sprint_ipv4_addr(&hdr->src),
-		net_sprint_ipv4_addr(&hdr->dst));
+	NET_DBG("IPv4 packet received from %s to %s, len %d", net_sprint_ipv4_addr(&hdr->src),
+		net_sprint_ipv4_addr(&hdr->dst), ntohs(hdr->len));
 
 	switch (hdr->proto) {
 	case IPPROTO_ICMP:

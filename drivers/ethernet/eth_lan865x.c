@@ -364,11 +364,13 @@ static void lan865x_read_chunks(const struct device *dev)
 	if (ret < 0) {
 		eth_stats_update_errors_rx(ctx->iface);
 		net_pkt_unref(pkt);
+		LOG_ERR("OA RX: Could not read chunk");
 		return;
 	}
 
 	/* Feed buffer frame to IP stack */
 	ret = net_recv_data(ctx->iface, pkt);
+	LOG_ERR("OA RX: Received packet, ret: %d", ret);
 	if (ret < 0) {
 		net_pkt_unref(pkt);
 	}

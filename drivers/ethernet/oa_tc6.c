@@ -322,6 +322,10 @@ int oa_tc6_read_chunks(struct oa_tc6 *tc6, struct net_pkt *pkt)
 			goto unref_buf;
 		}
 
+		LOG_INF("ftr %08x", ftr);
+		if (FIELD_GET(OA_DATA_FTR_SWO, ftr)) {
+			LOG_HEXDUMP_WRN(buf_rx->data, 64, "data");
+		}
 		if (FIELD_GET(OA_DATA_FTR_SV, ftr)) {
 			/* Adjust beginning of the buffer with SWO */
 			uint8_t swo = FIELD_GET(OA_DATA_FTR_SWO, ftr);
