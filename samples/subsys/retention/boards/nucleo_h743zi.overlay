@@ -1,0 +1,94 @@
+// Sram3
+/*
+/ {
+	ret_mem: sram@30047ff0 {
+		compatible = "zephyr,memory-region", "mmio-sram";
+		reg = <0x30047ff0 0x10>;
+		zephyr,memory-region = "RetainedMem";
+		status = "okay";
+
+		retainedmem {
+			compatible = "zephyr,retained-ram";
+			status = "okay";
+			#address-cells = <1>;
+			#size-cells = <1>;
+			retention0: retention@0 {
+				compatible = "zephyr,retention";
+				status = "okay";
+				reg = <0x0 0x10>;
+				prefix = [ be ef ];
+				checksum = <2>;
+			};
+		};
+	};
+};
+// make sram3 smaller as some part is used by retention
+&sram3 {
+	reg = <0x30040000 0x7ff0>;
+};
+*/
+
+
+
+// dtcm
+
+/ {
+	ret_mem: memory@2001FFF0 {
+		compatible = "zephyr,memory-region", "mmio-sram";
+		reg = <0x2001FFF0 0x10>;
+		zephyr,memory-region = "RetainedMem";
+		status = "okay";
+
+		retainedmem {
+			compatible = "zephyr,retained-ram";
+			status = "okay";
+			#address-cells = <1>;
+			#size-cells = <1>;
+			retention0: retention@0 {
+				compatible = "zephyr,retention";
+				status = "okay";
+				reg = <0x0 0x10>;
+				prefix = [ be ef];
+				checksum = <2>;
+			};
+		};
+	};
+};
+// make dtcm smaller as some part is used by retention
+&dtcm {
+	reg = <0x20000000 0x1FFF0>;
+};
+
+
+
+
+
+// sram0
+/*
+/ {
+	ret_mem: sram@2407fff0 {
+		compatible = "zephyr,memory-region", "mmio-sram";
+		reg = <0x2407fff0 0x10>;
+		zephyr,memory-region = "RetainedMem";
+		status = "okay";
+
+		retainedmem {
+			compatible = "zephyr,retained-ram";
+			status = "okay";
+			#address-cells = <1>;
+			#size-cells = <1>;
+			retention0: retention@0 {
+				compatible = "zephyr,retention";
+				status = "okay";
+				reg = <0x0 0x10>;
+				prefix = [ be ef  ];
+				checksum = <2>;
+			};
+		};
+	};
+};
+// make sram0 smaller as some part is used by retention
+&sram0 {
+	reg = <0x24000000 0x7fff0>;
+};
+*/
